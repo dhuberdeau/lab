@@ -16,3 +16,9 @@ A = TOM.add_player()
 # print the grid to check it out:
 print('Original Grid:')
 TOM.print_grid()
+
+# print('Random navigation:')
+# random_moves = TOM.navigate_sto(A,B,G,O,P)
+
+print('MDP solver navigation:')
+solver_moves = TOM.navigate_mdp(A,B,G,O,P)

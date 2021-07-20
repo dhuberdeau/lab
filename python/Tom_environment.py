@@ -183,7 +183,10 @@ class Tom_environment:
         pos = A
         path = [pos]
         move = ['u', 'r', 'd', 'l']
-        while moves < 31:
+
+        # find optimal policy_network
+
+        while moves <= 31:
             if self.check_left(pos) or self.check_right(pos) or self.check_up(pos) or self.check_down(pos):
                 move_dir = random.choice(move)
                 if move_dir == 'r':
@@ -270,7 +273,7 @@ class Tom_environment:
         pos = A
         path = [pos]
         move = ['u', 'r', 'd', 'l']
-        while moves < 31:
+        while moves <= 31:
             if self.check_left(pos) or self.check_right(pos) or self.check_up(pos) or self.check_down(pos):
                 move_dir = random.choice(move)
                 if move_dir == 'r':
@@ -334,7 +337,175 @@ class Tom_environment:
         pos = A
         path = [pos]
         move = ['u', 'r', 'd', 'l']
+
+        # find optimal policy_network
+        optimal_policy = self.solve_mdp(A,B,G,O,P)
+
+        while moves <= 31:
+            if self.check_left(pos) or self.check_right(pos) or self.check_up(pos) or self.check_down(pos):
+
+                # get optimal policy:
+                move_dir_ind = optimal_policy[self.convert_state(pos), moves]
+                move_dir = move[move_dir_ind]
+
+                if move_dir == 'r':
+                    if self.check_right(pos):
+                        #put agent in new position 1 to the right
+                        self.grid[pos[0]][pos[1]+1] = u"\u2B55"
+                        #put right arrow in old position
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9E"
+                        #make new position current position
+                        pos = (pos[0], pos[1]+1)
+                        #Increment move counter
+                        moves += 1
+                        #check if new position contains one of the targets
+                        if pos == B or pos == G or pos == O or pos == P:
+                            print('Object Eaten, Game Over!')
+                            print('Moves: ', moves)
+                            self.print_grid()
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                elif move_dir == 'l':
+                    if self.check_left(pos):
+                        self.grid[pos[0]][pos[1]-1] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9C"
+                        pos = (pos[0], pos[1]-1)
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            print('Object Eaten, Game Over!')
+                            print('Moves: ', moves)
+                            self.print_grid()
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                elif move_dir == 'u':
+                    if self.check_up(pos):
+                        self.grid[pos[0]-1][pos[1]] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9D"
+                        pos = (pos[0]-1, pos[1])
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            print('Object Eaten, Game Over!')
+                            print('Moves: ', moves)
+                            self.print_grid()
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                elif move_dir == 'd':
+                    if self.check_down(pos):
+                        self.grid[pos[0]+1][pos[1]] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9F"
+                        pos = (pos[0]+1, pos[1])
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            print('Object Eaten, Game Over!')
+                            print('Moves: ', moves)
+                            self.print_grid()
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                if len(path) > moves:
+                    path[moves] = pos
+                else:
+                    path.append(pos)
+            else:
+                break
+
+            print('Move: ', moves)
+            self.print_grid()
+            #print()
+        if moves == 31:
+            print('31 moves, Game Over!')
+        return moves, path
+
+    def navigate_mdp_np(self, A,B,G,O,P):
+        moves = 0
+        pos = A
+        path = [pos]
+        move = ['u', 'r', 'd', 'l']
+
+        # find optimal policy_network
+        optimal_policy = self.solve_mdp(A,B,G,O,P)
+
+        while moves <= 31:
+            if self.check_left(pos) or self.check_right(pos) or self.check_up(pos) or self.check_down(pos):
+
+                # get optimal policy:
+                move_dir_ind = optimal_policy[self.convert_state(pos), moves]
+                move_dir = move[move_dir_ind]
+
+                if move_dir == 'r':
+                    if self.check_right(pos):
+                        self.grid[pos[0]][pos[1]+1] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9E"
+                        pos = (pos[0], pos[1]+1)
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                elif move_dir == 'l':
+                    if self.check_left(pos):
+                        self.grid[pos[0]][pos[1]-1] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9C"
+                        pos = (pos[0], pos[1]-1)
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                elif move_dir == 'u':
+                    if self.check_up(pos):
+                        self.grid[pos[0]-1][pos[1]] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9D"
+                        pos = (pos[0]-1, pos[1])
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                elif move_dir == 'd':
+                    if self.check_down(pos):
+                        self.grid[pos[0]+1][pos[1]] = u"\u2B55"
+                        self.grid[pos[0]][pos[1]] = ' ' + u"\u2B9F"
+                        pos = (pos[0]+1, pos[1])
+                        moves += 1
+                        if pos == B or pos == G or pos == O or pos == P:
+                            if len(path) > moves:
+                                path[moves] = pos
+                            else:
+                                path.append(pos)
+                            break
+                if len(path) > moves:
+                    path[moves] = pos
+                else:
+                    path.append(pos)
+            else:
+                break
+        return moves, path
+
+    def solve_mdp(self, A,B,G,O,P):
+        moves = 0
+        pos = A
+        path = [pos]
+        move = ['u', 'r', 'd', 'l']
         grid_shape = np.shape(self.grid)
+        discount_factor = .95
 
         def get_state_transition_matrix():
             # setup the state transition probability matrix
@@ -415,12 +586,12 @@ class Tom_environment:
 
         # run MDP simulation:
         grid_mdp = mdp.mdp.FiniteHorizon(transition_matrix,
-            reward_matrix, .9, 31)
+            reward_matrix, discount_factor, 31)
         grid_mdp.run()
 
         # show result:
         return grid_mdp.policy
-        
+
     def convert_state(self, state):
         grid_shape = np.shape(self.grid)
         ind_convert = state[0]*grid_shape[1] + state[1]

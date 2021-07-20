@@ -73,8 +73,12 @@ if __name__ == '__main__':
                       help='Vertical size of the observations')
   parser.add_argument('--runfiles_path', type=str, default=None,
                       help='Set the runfiles path to find DeepMind Lab data')
-  parser.add_argument('--level_script', type=str, default='tests/demo_map',
-                      help='The environment level script to load')
+  # parser.add_argument('--level_script', type=str, default='stairway_to_melon',
+  #                   help='The environment level script to load')
+  parser.add_argument('--level_script', type=str, default='tests/empty_room_test',
+                    help='The environment level script to load')
+  # parser.add_argument('--level_script', type=str, default='tests/demo_map',
+  #                     help='The environment level script to load')
 
   args = parser.parse_args()
   if args.runfiles_path:

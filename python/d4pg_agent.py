@@ -26,18 +26,20 @@ import six
 
 import deepmind_lab
 
-# from acme import environment_loop
-# from acme import specs
-# from acme import wrappers
-# from acme.agents.tf import d4pg
-# from acme.tf import networks
-# from acme.tf import utils as tf2_utils
-# from acme.utils import loggers
+# deep imports:
+import sonnet as snt
+from acme import environment_loop
+from acme import specs
+from acme import wrappers
+from acme.agents.tf import d4pg
+from acme.tf import networks
+from acme.tf import utils as tf2_utils
+from acme.utils import loggers
 
+from dmenv_module import Lab
 
 def _action(*entries):
   return np.array(entries, dtype=np.intc)
-
 
 class DiscretizedRandomAgent(object):
   """Simple agent for DeepMind Lab."""
@@ -61,7 +63,6 @@ class DiscretizedRandomAgent(object):
   def step(self, unused_reward, unused_image):
     """Gets an image state and a reward, returns an action."""
     return random.choice(DiscretizedRandomAgent.ACTION_LIST)
-
 
 class SpringAgent(object):
   """A random agent using spring-like forces for its action evolution."""
@@ -144,7 +145,6 @@ class SpringAgent(object):
     self.velocity = np.zeros([len(self.action_spec)])
     self.action = np.zeros([len(self.action_spec)])
 
-
 def run(length, width, height, fps, level, record, demo, demofiles, video):
   """Spins up an environment and runs the random agent."""
   config = {
@@ -160,13 +160,53 @@ def run(length, width, height, fps, level, record, demo, demofiles, video):
     config['demofiles'] = demofiles
   if video:
     config['video'] = video
-  env = deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config)
+  # env = deepmind_lab.Lab(level, ['RGB_INTERLEAVED'], config=config)
+  env = Lab(level, ['RGB_INTERLEAVED'], config=config)
+
+  # environment = gym.make('MountainCarContinuous-v0')
+  # environment = gym.make('Pendulum-v0')
+
+  # environment = wrappers.GymWrapper(env)
+  # environment = wrappers.SinglePrecisionWrapper(environment)
+  # environment_spec = specs.make_environment_spec(environment)
 
   env.reset()
 
+  environment = wrappers.SinglePrecisionWrapper(env)
+  environment_spec = specs.make_environment_spec(environment)
+  # num_dimensions = np.prod(environment_spec.actions.shape, dtype=int)
+  num_dimensions = np.prod(np.shape(environment_spec.actions))
+
   # Starts the random spring agent. As a simpler alternative, we could also
   # use DiscretizedRandomAgent().
-  agent = SpringAgent(env.action_spec())
+
+  # agent = SpringAgent(env.action_spec())
+  # Create the shared observation network; here simply a state-less operation.
+  observation_network = tf2_utils.batch_concat
+
+  # Create the deterministic policy network.
+  policy_network = snt.Sequential([
+      networks.LayerNormMLP((256, 256, 256), activate_final=True),
+      networks.NearZeroInitializedLinear(num_dimensions),
+      networks.TanhToSpec(environment_spec.actions),
+  ])
+
+  # Create the distributional critic network.
+  critic_network = snt.Sequential([
+      # The multiplexer concatenates the observations/actions.
+      networks.CriticMultiplexer(),
+      networks.LayerNormMLP((512, 512, 256), activate_final=True),
+      networks.DiscreteValuedHead(vmin=-150., vmax=150., num_atoms=51),
+  ])
+
+  agent = d4pg.D4PG(
+      environment_spec=environment_spec,
+      policy_network=policy_network,
+      critic_network=critic_network,
+      observation_network=observation_network,
+      sigma=1.0,
+      checkpoint=False
+  )
 
   reward = 0
 
@@ -196,7 +236,7 @@ if __name__ == '__main__':
   parser.add_argument('--runfiles_path', type=str, default=None,
                       help='Set the runfiles path to find DeepMind Lab data')
   parser.add_argument('--level_script', type=str,
-                      default='stairway_to_melon',
+                      default='tests/empty_room_test',
                       help='The environment level script to load')
   parser.add_argument('--record', type=str, default=None,
                       help='Record the run to a demo file')

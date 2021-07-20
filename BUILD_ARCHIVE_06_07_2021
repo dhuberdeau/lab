@@ -22,8 +22,6 @@ ARCH_VAR = "-DARCH_STRING=\\\"x86_64\\\""
 
 STANDALONE_VAR = "-DSTANDALONE"
 
-AGENT_FILE = "random_agent.py"
-
 cc_library(
     name = "qcommon_hdrs",
     hdrs = [
@@ -1010,7 +1008,6 @@ cc_binary(
     visibility = [
         "//python/pip_package:__subpackages__",
         "//python/tests:__subpackages__",
-        "//unreal:__subpackages__"
     ],
     deps = [
         ":dmlablib",
@@ -1032,14 +1029,14 @@ py_library(
 
 py_binary(
     name = "python_random_agent",
-    srcs = ["python/" + AGENT_FILE],
-    main = "python/" + AGENT_FILE,
+    srcs = ["python/random_agent_simple.py"],
+    main = "python/random_agent_simple.py",
     deps = [":python_random_agent_lib"],
 )
 
 py_library(
     name = "python_random_agent_lib",
-    srcs = ["python/" + AGENT_FILE],
+    srcs = ["python/random_agent_simple.py"],
     data = [":deepmind_lab.so"],
     visibility = ["//python/tests:__subpackages__"],
     deps = ["@six_archive//:six"],
